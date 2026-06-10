@@ -3311,6 +3311,11 @@ class App(BaseHTTPRequestHandler):
                 self.handle_command_dismiss(command_action.group(1))
                 return
 
+            command_followup = re.match(r"^/api/commands/([^/]+)/draft-followup$", path)
+            if command_followup:
+                self.handle_command_draft_followup(command_followup.group(1))
+                return
+
             json_response(self, {"error": "Not found"}, 404)
         except Exception as exc:
             json_response(self, {"error": str(exc)}, 500)
@@ -4153,6 +4158,65 @@ class App(BaseHTTPRequestHandler):
                 break
         write_state(state)
         json_response(self, state_payload(state, ok=True))
+
+    def handle_command_draft_followup(self, command_id: str) -> None:
+        state = read_state()
+        result = next((item for item in state.get("command_results", []) if item.get("id") == command_id), None)
+        if not result or result.get("intent") != "risk_check":
+            json_response(self, {"error": "Risk check result not found"}, 404)
+            return
+        payload = result.get("payload") or {}
+        invoice_number = str(payload.get("invoice") or "")
+        risk_profile = payload.get("risk_profile") if isinstance(payload.get("risk_profile"), dict) else {}
+        invoice = next(
+            (item for item in state.get("invoices", []) if item.get("invoice_number") == invoice_number and item.get("status") != "paid"),
+            None,
+        )
+        risk_summary = risk_profile.get("summary") or "The latest buyer risk check indicates this customer should be followed up."
+        if invoice:
+            invoice["risk_profile"] = risk_profile or invoice.get("risk_profile")
+            ensure_agent_invoice_artifacts(state, invoice, source="User Command", purpose="buyer risk follow-up", log_activity=False)
+            purpose = overdue_followup_purpose(days_overdue(invoice)) if days_overdue(invoice) > 0 else "buyer risk follow-up"
+            draft = create_draft(
+                state,
+                invoice,
+                purpose,
+                source="User Command",
+                reasoning=(
+                    f"The user asked Lynn to convert an Exa-assisted risk check into a reviewable follow-up. {risk_summary}"
+                ),
+                user_instruction="Draft a concise follow-up based on the Exa-assisted buyer risk check.",
+            )
+            message = f"Drafted follow-up for {invoice.get('invoice_number')} and moved it to Waiting for your OK."
+        else:
+            po = next(
+                (
+                    item
+                    for item in state.get("po_pipeline", [])
+                    if (item.get("proposed_invoice_number") or item.get("po_number")) == invoice_number
+                ),
+                None,
+            )
+            if not po:
+                json_response(self, {"error": "Invoice or PO not found for this risk result"}, 404)
+                return
+            po["risk_profile"] = risk_profile or po.get("risk_profile")
+            draft = create_invoice_approval(state, po, source="User Command", log_activity=False)
+            if risk_profile:
+                draft["priority"] = "P1" if int(risk_profile.get("score", 0) or 0) >= 70 else "P2"
+                draft["priority_label"] = "Risk review"
+                draft["priority_reason"] = f"Exa-assisted buyer risk check: {risk_summary}"
+            add_activity(
+                state,
+                f"Attached buyer risk check to {invoice_number}.",
+                source="User Command",
+                kind="Risk Routed",
+                reasoning="The user chose Draft follow-up for review from an Exa-assisted risk result before an active invoice existed.",
+                outcome="Risk note added to the invoice approval already waiting for your OK.",
+            )
+            message = f"Added Exa risk context to {invoice_number} in Waiting for your OK."
+        write_state(state)
+        json_response(self, state_payload(state, ok=True, draftedFollowup=draft, message=message))
 
     def handle_draft_action(self, draft_id: str, action: str) -> None:
         state = read_state()

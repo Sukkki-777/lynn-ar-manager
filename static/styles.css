@@ -528,6 +528,18 @@ hr.divider,
   line-height: 1.55;
 }
 
+.command-action-btn {
+  margin-top: 8px;
+  border: 1px solid #dbe6d8;
+  border-radius: 20px;
+  padding: 8px 12px;
+  background: #eaf3e9;
+  color: #3d6b3f;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+}
+
 .draft-queue,
 .activity-list {
   display: grid;

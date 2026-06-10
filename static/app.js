@@ -979,6 +979,18 @@ function renderCommandBody(result) {
       ${result.details?.length ? `<p>${result.details.map(escapeHtml).join("<br/>")}</p>` : ""}
     `;
   }
+  if (result.intent === "risk_check") {
+    return `
+      <p>${escapeHtml(lynnVoice(result.message))}</p>
+      ${renderProviderReasoning(result)}
+      ${result.details?.length ? `<p>${result.details.map(escapeHtml).join("<br/>")}</p>` : ""}
+      ${
+        result.payload?.invoice
+          ? `<button class="command-action-btn" data-risk-draft-result="${escapeAttr(result.id)}">Draft follow-up for review</button>`
+          : ""
+      }
+    `;
+  }
   return `
     <p>${escapeHtml(lynnVoice(result.message))}</p>
     ${renderProviderReasoning(result)}
@@ -1487,6 +1499,18 @@ byId("draftQueue").addEventListener("click", async (event) => {
 });
 
 byId("commandResults").addEventListener("click", async (event) => {
+  const riskDraft = event.target.closest("[data-risk-draft-result]");
+  if (riskDraft) {
+    try {
+      const payload = await api(`/api/commands/${riskDraft.dataset.riskDraftResult}/draft-followup`, { method: "POST" });
+      state = payload;
+      render();
+      toast(payload.message || "Draft moved to Waiting for your OK.");
+    } catch (err) {
+      toast(err.message);
+    }
+    return;
+  }
   const send = event.target.closest("[data-draft-send]");
   const skip = event.target.closest("[data-draft-skip]");
   const draftId = send?.dataset.draftSend || skip?.dataset.draftSkip;
