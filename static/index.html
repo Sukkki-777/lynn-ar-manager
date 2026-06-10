@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ask Lynn · AR Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-note">
+      <span>AR Agent · Lynn persona · HelloBike Manufacturing</span>
+      <div class="top-actions">
+        <div class="status-strip">
+          <span id="openaiStatus" class="status-pill">LLM</span>
+          <span id="stripeStatus" class="status-pill">Stripe</span>
+          <span id="exaStatus" class="status-pill">Exa</span>
+        </div>
+        <div class="lynn-chip"><div class="lynn-avatar">L</div> Lynn is on duty</div>
+      </div>
+    </div>
+
+    <main class="app">
+      <section class="panel">
+        <div class="panel-header">
+          <span class="panel-title">1 Invoicing</span>
+          <span class="pill pill-mist">Auto · daily 09:00</span>
+        </div>
+        <div class="panel-body">
+          <div class="slabel">Upload your PO tracker</div>
+          <label class="upload-zone" for="poFile">
+            <input id="poFile" type="file" accept=".csv,.xlsx,.xls" />
+            <div class="upload-icon">📋</div>
+            <div class="upload-text">Drop your PO Excel here</div>
+            <div class="upload-sub">.xlsx or .csv · any column format</div>
+            <span class="upload-btn">Choose file</span>
+          </label>
+
+          <div class="scheduler-line">
+            <span>Lynn wakes daily at <b id="schedulerStatus">09:00 Asia/Shanghai</b></span>
+            <button id="autoRunToggle" class="toggle active" aria-pressed="true" aria-label="Toggle morning check-in">
+              <span></span>
+            </button>
+          </div>
+          <div class="scheduler-meta">
+            <span id="schedulerMode">Vercel Cron ready</span>
+            <span>Next: <b id="schedulerNext">--</b></span>
+          </div>
+
+          <div class="ready-title-row">
+            <div class="slabel invoiceable-label"><span id="poListTitle">Ready to act on</span> <span id="invoiceCount">(0 orders)</span></div>
+            <div class="pipeline-tabs" aria-label="PO list view">
+              <button class="pipeline-tab active" data-po-view="ready">Ready</button>
+              <button class="pipeline-tab" data-po-view="pipeline">PO pipeline</button>
+            </div>
+          </div>
+          <div id="invoiceList" class="po-list"></div>
+
+          <hr class="divider" />
+
+          <div class="slabel">2 Ask Lynn</div>
+          <div class="ask-lynn">
+            <div class="ask-lynn-label"><span>✦</span> Tell Lynn what you need</div>
+            <div class="ask-box">
+              <input id="commandInput" class="ask-input" type="text" value="send a reminder to overdue clients" />
+              <button id="commandBtn" class="ask-btn">Ask ↗</button>
+            </div>
+            <div class="ask-hint">
+              Just checking? "Which clients are overdue?" → Lynn answers directly.<br />
+              Need action? "Send Innaworks a reminder" → Lynn prepares it for your OK.
+            </div>
+            <div id="commandResults" class="command-results"></div>
+          </div>
+
+          <div class="hidden-controls" aria-hidden="true">
+            <button id="poFilterBtn" class="filter active">PO Pipeline</button>
+            <button id="activeFilterBtn" class="filter">Active</button>
+            <button id="paidFilterBtn" class="filter">Paid</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <span class="panel-title">2 Waiting for your OK</span>
+          <span id="queuePendingBadge" class="pill pill-clay">0 items</span>
+        </div>
+        <div class="panel-body">
+          <div class="slabel">Lynn has prepared these — please review</div>
+          <div class="queue-tabs" aria-label="Waiting for your OK views">
+            <button id="queuePendingBtn" class="queue-tab active" data-queue-filter="pending">Waiting <span>0</span></button>
+            <button id="queueApprovedBtn" class="queue-tab" data-queue-filter="approved">Sent <span>0</span></button>
+            <button id="queueRejectedBtn" class="queue-tab" data-queue-filter="rejected">Held <span>0</span></button>
+            <button id="queueAllBtn" class="queue-tab" data-queue-filter="all">All <span>0</span></button>
+          </div>
+          <div id="draftQueue" class="draft-queue"></div>
+
+          <hr class="divider" />
+
+          <div class="slabel">Lynn's activity log</div>
+          <div class="log-legend">What Lynn did and why — full history</div>
+          <div id="activityList" class="activity-list"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <span class="panel-title">3 Your AR picture</span>
+        </div>
+        <div class="panel-body">
+          <div class="slabel">Right now</div>
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-lbl">Still to collect</div>
+              <div id="metricOutstanding" class="stat-val">$0</div>
+              <div id="metricOutstandingSub" class="stat-sub">0 invoices</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-lbl">Overdue</div>
+              <div id="metricOverdue" class="stat-val danger">$0</div>
+              <div id="metricOverdueSub" class="stat-sub">0 clients</div>
+            </div>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-lbl">Due this week</div>
+              <div id="metricDueWeek" class="stat-val">$0</div>
+              <div id="metricDueWeekSub" class="stat-sub">Upcoming</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-lbl">Collected this month</div>
+              <div id="metricPaid" class="stat-val success">$0</div>
+              <div id="metricPaidSub" class="stat-sub">Settled</div>
+            </div>
+          </div>
+
+          <div class="slabel">Money coming in — next 3 months</div>
+          <div id="cashflowBars" class="cashflow-bars"></div>
+          <div class="hidden-dashboard-values">
+            <span id="cashflowWindow">Next 30 days</span>
+            <span id="cashflowContractual">$0</span>
+            <span id="cashflowRiskAdjusted">$0</span>
+            <span id="cashflowAtRisk">$0</span>
+          </div>
+
+          <div class="slabel">How reliable are your clients?</div>
+          <div id="buyerRiskList" class="buyer-risk-list"></div>
+
+          <div class="slabel">How old is the money owed?</div>
+          <div id="agingTable" class="aging-table"></div>
+
+          <div class="slabel">Stripe confirmed payment</div>
+          <div id="stripePaymentList" class="stripe-payment-list"></div>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="invoiceModal">
+      <div class="modal-head">
+        <div>
+          <h2 id="modalInvoiceNumber">Invoice</h2>
+          <p id="modalClient"></p>
+        </div>
+        <button id="closeModal" class="icon-btn" aria-label="Close">×</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+      <div class="modal-actions">
+        <button id="viewDetailsBtn" class="secondary">View Invoice Details</button>
+        <button id="viewReasoningBtn" class="secondary">Why I did this</button>
+        <button id="createPaymentLinkBtn" class="secondary">Create Stripe link</button>
+        <button id="simulatePaidBtn" class="success-btn">Simulate paid</button>
+      </div>
+    </dialog>
+
+    <div id="toast" class="toast"></div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

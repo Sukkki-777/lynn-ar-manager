@@ -1,0 +1,9 @@
+PO Number,Client Name,Client Email,Amount (USD),Currency,Payment Terms,PO Date,Shipment Date,Notes
+PO-2026-001,Hannoosh Ltd,ganesh@hannoosh.com,12500,USD,Net 30,2026-05-01,2026-05-03,Machine parts batch 1
+PO-2026-002,Innaworks,pavan@innaworks.com,8200,USD,Net 30,2026-05-08,2026-05-10,Electronics components
+PO-2026-003,PLU-Pluto,amy@pluto.com,6000,USD,Net 60,2026-04-28,2026-05-01,Packaging materials
+PO-2026-004,Hannoosh Ltd,ganesh@hannoosh.com,3500,USD,Net 30,2026-04-08,2026-04-10,Machine parts batch 2
+PO-2026-005,Innaworks,pavan@innaworks.com,15000,USD,Net 60,2026-04-12,2026-04-15,Bulk order Q2
+PO-2026-006,PLU-Pluto,amy@pluto.com,4800,USD,Net 30,2026-06-01,2026-06-05,Awaiting shipment confirmation
+PO-2026-007,Hannoosh Ltd,ganesh@hannoosh.com,9200,USD,Net 30,2026-05-18,2026-05-20,Special order
+PO-2026-008,Innaworks,pavan@innaworks.com,22000,USD,Net 90,2026-02-28,2026-03-01,Annual contract Q1
