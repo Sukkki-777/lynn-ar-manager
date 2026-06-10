@@ -2706,7 +2706,10 @@ Invoice:
 Risk profile:
 {json.dumps(email_risk_context, ensure_ascii=False)}
 """
-    return openai_response(prompt)
+    try:
+        return openai_response(prompt)
+    except Exception:
+        return template_email(invoice, purpose)
 
 
 def email_with_payment_link(invoice: dict[str, Any], body: str) -> str:
