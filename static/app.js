@@ -140,6 +140,7 @@ function poAsReceivable(po = {}) {
     shipment_date: po.shipment_date || "",
     due_date: dueText,
     status: invoiceStatusFromDue(due),
+    risk_profile: po.risk_profile || null,
     source: "po_pipeline",
   };
 }

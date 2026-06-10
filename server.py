@@ -4068,26 +4068,56 @@ class App(BaseHTTPRequestHandler):
             return
         elif "risk" in normalized:
             candidates = [i for i in state.get("invoices", []) if i.get("status") != "paid"]
-            if not candidates:
-                message = "No active invoices need risk review."
+            target_po = None
+            if candidates:
+                target = max(candidates, key=lambda inv: days_overdue(inv))
+                target_scope = "active invoice"
+            else:
+                ready_pos = [
+                    po
+                    for po in state.get("po_pipeline", [])
+                    if po.get("status") == "ready_to_invoice" and not po.get("invoice_id")
+                ]
+                target_po = max(ready_pos, key=lambda po: float(po.get("amount", 0) or 0), default=None)
+                target = forecast_record_from_po(target_po) if target_po else None
+                target_scope = "pending invoice approval"
+            if not target:
+                message = "No active invoices or ready POs need risk review."
                 result = add_command_result(state, command, message, "risk_check", [])
             else:
-                target = max(candidates, key=lambda inv: days_overdue(inv))
                 profile = update_invoice_risk(target)
-                message = f"Risk check completed for {target['invoice_number']}: {profile['level']} risk, score {profile['score']}/100."
+                if target_po is not None:
+                    target_po["risk_profile"] = profile
+                message = (
+                    f"Risk check completed for {target['invoice_number']} ({target_scope}): "
+                    f"{profile['level']} risk, score {profile['score']}/100."
+                )
                 ai = llm_business_summary(
                     command,
-                    "Summarize this single-invoice risk check and recommend next internal action.",
-                    {"invoice": command_invoice_item(target), "risk_profile": profile, "days_overdue": days_overdue(target)},
+                    "Summarize this buyer risk check and recommend next internal action.",
+                    {
+                        "scope": target_scope,
+                        "invoice": command_invoice_item(target),
+                        "risk_profile": profile,
+                        "days_overdue": days_overdue(target),
+                    },
                     message,
                     profile.get("summary", "The system calculated risk from due date, invoice age, and available risk profile."),
                 )
                 details = [
+                    f"Scope: {target_scope}",
                     f"Recommended action: {profile.get('recommended_action', 'Standard follow-up')}",
                     f"Suggested tone: {profile.get('recommended_tone', 'Standard')}",
                     f"Source: {'Exa' if profile.get('provider') == 'exa' else 'baseline rules'}",
                 ]
-                result = add_command_result(state, command, ai["recommendation"], "risk_check", [d for d in details if d], {"invoice": target.get("invoice_number"), "risk_profile": profile, **ai})
+                result = add_command_result(
+                    state,
+                    command,
+                    ai["recommendation"],
+                    "risk_check",
+                    [d for d in details if d],
+                    {"invoice": target.get("invoice_number"), "risk_profile": profile, **ai},
+                )
             add_activity(
                 state,
                 message,
