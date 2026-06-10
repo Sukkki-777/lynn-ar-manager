@@ -188,6 +188,11 @@ async function api(path, options = {}) {
 
 async function refresh() {
   try {
+    await api("/api/stripe/backfill-links", { method: "POST" });
+  } catch (err) {
+    console.warn("Stripe link backfill skipped", err);
+  }
+  try {
     await api("/api/stripe/sync-payments", { method: "POST" });
   } catch (err) {
     console.warn("Stripe sync skipped", err);
