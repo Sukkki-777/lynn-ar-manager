@@ -1,3 +1,4 @@
 pandas
 openpyxl
 reportlab
+legacy-cgi
