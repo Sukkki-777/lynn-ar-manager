@@ -281,11 +281,12 @@ body {
 
 </div>
 <script>
+  const appTarget = window.location.protocol === "file:" ? "https://lynn-ar-manager.onrender.com/app" : "/app";
   document.getElementById("enterLynn").addEventListener("click", () => {
-    window.location.href = "/app";
+    window.location.href = appTarget;
   });
   document.getElementById("email").addEventListener("keydown", (event) => {
-    if (event.key === "Enter") window.location.href = "/app";
+    if (event.key === "Enter") window.location.href = appTarget;
   });
 </script>
 </body>
