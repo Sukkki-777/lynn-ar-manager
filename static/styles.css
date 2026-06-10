@@ -968,6 +968,17 @@ hr.divider,
   border-radius: 2px;
 }
 
+.risk-source {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #7b5f96;
+  background: #f2edf7;
+}
+
 .aging-row {
   display: flex;
   justify-content: space-between;

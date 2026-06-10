@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lynn — Your AR Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #f0ede8;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.page {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  max-width: 940px;
+  width: 100%;
+  min-height: 600px;
+  background: #faf9f7;
+  border-radius: 20px;
+  border: 1px solid #dedad4;
+  overflow: hidden;
+}
+.left {
+  background: #1e1e28;
+  padding: 44px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.left-glow {
+  position: absolute;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(180,148,210,0.13) 0%, transparent 70%);
+  top: -40px; right: -60px;
+  pointer-events: none;
+}
+.brand {
+  display: flex; align-items: center; gap: 9px;
+  position: relative; z-index: 1;
+}
+.brand-mark {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(180,148,210,0.2);
+  border: 1px solid rgba(180,148,210,0.35);
+  display: flex; align-items: center; justify-content: center;
+}
+.brand-dot { width: 8px; height: 8px; border-radius: 50%; background: #c8a4e0; }
+.brand-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px; color: #f0ede8; letter-spacing: 0.04em;
+}
+.avatar-center {
+  display: flex; flex-direction: column; align-items: center;
+  position: relative; z-index: 1; flex: 1; justify-content: center;
+}
+.avatar-wrap {
+  position: relative; margin-bottom: 18px;
+}
+.avatar-circle {
+  width: 176px; height: 176px; border-radius: 50%;
+  background: rgba(180,148,210,0.07);
+  border: 1px solid rgba(180,148,210,0.14);
+  overflow: hidden;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.chip {
+  position: absolute;
+  background: rgba(240,237,232,0.07);
+  border: 1px solid rgba(240,237,232,0.13);
+  border-radius: 20px;
+  padding: 5px 11px;
+  font-size: 10.5px; color: #c0bcb6;
+  white-space: nowrap; font-weight: 300;
+}
+.chip-tl { top: 16px; left: -36px; }
+.chip-tr { top: 16px; right: -42px; }
+.chip-bl { bottom: 28px; left: -44px; }
+.chip-br { bottom: 28px; right: -46px; }
+.cdot { display:inline-block; width:5px; height:5px; border-radius:50%; margin-right:4px; vertical-align:middle; margin-bottom:1px; }
+.lynn-label {
+  font-family: 'DM Serif Display', serif;
+  font-style: italic; font-size: 26px; color: #f0ede8; margin-bottom: 3px;
+}
+.lynn-role {
+  font-size: 11px; color: #686460; font-weight: 300;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.vision { position: relative; z-index: 1; }
+.vision-line { width: 28px; height: 1px; background: rgba(180,148,210,0.45); margin-bottom: 13px; }
+.vision-quote {
+  font-family: 'DM Serif Display', serif;
+  font-style: italic; font-size: 15px; color: #d0ccc6; line-height: 1.65; margin-bottom: 11px;
+}
+.vision-sub { font-size: 11.5px; color: #626060; font-weight: 300; line-height: 1.75; }
+
+/* RIGHT */
+.right { padding: 48px 44px; display: flex; flex-direction: column; justify-content: center; }
+.eyebrow { font-size: 10px; font-weight: 500; color: #a09c96; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+.title { font-family: 'DM Serif Display', serif; font-size: 27px; color: #2a2a35; margin-bottom: 7px; line-height: 1.2; }
+.subtitle { font-size: 13px; color: #8a8680; font-weight: 300; line-height: 1.65; margin-bottom: 34px; }
+.flabel { font-size: 11px; font-weight: 500; color: #6a6660; margin-bottom: 7px; display: block; }
+.finput {
+  width: 100%; padding: 11px 15px;
+  border: 1px solid #dedad4; border-radius: 10px;
+  font-size: 13.5px; font-family: 'DM Sans', sans-serif;
+  background: #f5f3ef; color: #2a2a35; outline: none;
+  transition: border-color 0.2s, background 0.2s; margin-bottom: 22px;
+}
+.finput:focus { border-color: #b8b0c8; background: #fff; }
+.finput::placeholder { color: #b8b4ae; }
+.fbtn {
+  width: 100%; padding: 12px; border: none; border-radius: 10px;
+  background: #1e1e28; color: #f0ede8;
+  font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.2s;
+}
+.fbtn:hover { background: #2e2e3e; }
+.divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; }
+.dline { flex: 1; height: 1px; background: #ece9e3; }
+.dtext { font-size: 10px; color: #b8b4ae; }
+.caps { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.cap { display: flex; align-items: center; gap: 7px; font-size: 11px; color: #6a6660; font-weight: 300; }
+.capdot { width: 5px; height: 5px; border-radius: 50%; background: #c8b8d8; flex-shrink: 0; }
+.fnote { margin-top: 26px; font-size: 10px; color: #b8b4ae; font-weight: 300; line-height: 1.7; text-align: center; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="left">
+    <div class="left-glow"></div>
+
+    <div class="brand">
+      <div class="brand-mark"><div class="brand-dot"></div></div>
+      <span class="brand-name">Lynn</span>
+    </div>
+
+    <div class="avatar-center">
+      <div class="avatar-wrap">
+        <div class="chip chip-tl"><span class="cdot" style="background:#98c898"></span>Paid ✓ $8,200</div>
+        <div class="chip chip-tr"><span class="cdot" style="background:#e8a888"></span>Overdue $38K</div>
+        <div class="chip chip-bl"><span class="cdot" style="background:#a8b8d8"></span>3 to review</div>
+        <div class="chip chip-br"><span class="cdot" style="background:#c8a4e0"></span>Scan done 09:00</div>
+
+        <div class="avatar-circle">
+          <svg width="176" height="176" viewBox="0 0 176 176" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+            <!-- bg -->
+            <circle cx="88" cy="88" r="88" fill="#252532"/>
+
+            <!-- BODY — drawn first, behind everything -->
+            <path d="M20 200 C20 165 48 148 88 146 C128 148 156 165 156 200 Z" fill="#2a2a3a"/>
+            <!-- shirt V -->
+            <path d="M76 148 L88 162 L100 148" stroke="#c8a4e0" stroke-width="1.5" fill="none" opacity="0.45"/>
+
+            <!-- NECK -->
+            <rect x="80" y="120" width="16" height="28" rx="7" fill="#c09060"/>
+
+            <!-- HEAD SHAPE — skin, drawn on top of neck -->
+            <ellipse cx="88" cy="97" rx="30" ry="33" fill="#c09060"/>
+
+            <!-- HAIR BACK — only the part behind/below the head, not on face -->
+            <!-- back of hair at top — semicircle sitting above forehead -->
+            <path d="M58 90 C58 62 72 46 88 46 C104 46 118 62 118 90 C114 76 103 68 88 68 C73 68 62 76 58 90 Z" fill="#18100e"/>
+
+            <!-- side hair left — behind ear, below cheek level only -->
+            <path d="M58 93 C55 83 56 70 61 62 C58 74 58 88 60 106 C58 102 57 98 58 93 Z" fill="#18100e"/>
+            <!-- side hair right -->
+            <path d="M118 93 C121 83 120 70 115 62 C118 74 118 88 116 106 C118 102 119 98 118 93 Z" fill="#18100e"/>
+
+            <!-- FACE FEATURES on top of everything -->
+
+            <!-- brows — thin arched -->
+            <path d="M70 84 C73 82 77 82 80 83" stroke="#18100e" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+            <path d="M96 83 C99 82 103 82 106 84" stroke="#18100e" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+
+            <!-- eyes white -->
+            <path d="M67 91 C69 88 73 87 77 88 C81 89 82 91 81 93 C79 95 70 95 68 93 C67 92 67 91 67 91 Z" fill="#fff"/>
+            <path d="M95 91 C97 88 101 87 105 88 C109 89 110 91 109 93 C107 95 98 95 96 93 C95 92 95 91 95 91 Z" fill="#fff"/>
+
+            <!-- iris -->
+            <ellipse cx="74.5" cy="91.5" rx="3.8" ry="4.2" fill="#201010"/>
+            <ellipse cx="102.5" cy="91.5" rx="3.8" ry="4.2" fill="#201010"/>
+
+            <!-- shine -->
+            <circle cx="75.8" cy="90" r="1.2" fill="#fff"/>
+            <circle cx="103.8" cy="90" r="1.2" fill="#fff"/>
+
+            <!-- eyeliner -->
+            <path d="M67 90.5 C69 88 73 87 77 88 C81 89 82.5 90.5 82 91.5" stroke="#18100e" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+            <path d="M95 90.5 C97 88 101 87 105 88 C109 89 110.5 90.5 110 91.5" stroke="#18100e" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+            <!-- lash flick -->
+            <path d="M82 91 L85 89.5" stroke="#18100e" stroke-width="1" fill="none" stroke-linecap="round"/>
+            <path d="M110 91 L113 89.5" stroke="#18100e" stroke-width="1" fill="none" stroke-linecap="round"/>
+
+            <!-- nose minimal -->
+            <path d="M86 100 C86 104 88 106 90 106" stroke="#a07848" stroke-width="1" fill="none" stroke-linecap="round"/>
+            <circle cx="86" cy="106.5" r="1.4" fill="#a07848" opacity="0.45"/>
+            <circle cx="92" cy="106.5" r="1.4" fill="#a07848" opacity="0.45"/>
+
+            <!-- lips -->
+            <path d="M75 113 C79 109 84 108 88 108 C92 108 97 109 101 113 C99 117 94 119 88 119 C82 119 77 117 75 113 Z" fill="#c06858"/>
+            <path d="M75 113 C79 111 83 110 86 111 C87 110 89 110 90 111 C93 110 97 111 101 113" stroke="#a85848" stroke-width="0.8" fill="none"/>
+            <path d="M83 115 C86 114 90 114 93 115" stroke="#e08878" stroke-width="1" fill="none" opacity="0.5" stroke-linecap="round"/>
+
+            <!-- blush -->
+            <ellipse cx="63" cy="101" rx="7" ry="4" fill="#e89070" opacity="0.18"/>
+            <ellipse cx="113" cy="101" rx="7" ry="4" fill="#e89070" opacity="0.18"/>
+
+            <!-- earrings — gold hoops, outside face -->
+            <circle cx="58" cy="101" r="4.5" stroke="#d4a840" stroke-width="1.5" fill="none"/>
+            <circle cx="118" cy="101" r="4.5" stroke="#d4a840" stroke-width="1.5" fill="none"/>
+
+            <!-- hair fringe / front wisps — on top of face at forehead -->
+            <path d="M68 74 C72 62 80 57 88 57 C96 57 104 62 108 74 C102 66 95 63 88 63 C81 63 74 66 68 74 Z" fill="#18100e"/>
+            <!-- a few face-framing wisp strands -->
+            <path d="M62 84 C60 76 62 68 66 64" stroke="#18100e" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.9"/>
+            <path d="M114 84 C116 76 114 68 110 64" stroke="#18100e" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.9"/>
+
+          </svg>
+        </div>
+      </div>
+
+      <div class="lynn-label">Lynn</div>
+      <div class="lynn-role">Your AR Manager</div>
+    </div>
+
+    <div class="vision">
+      <div class="vision-line"></div>
+      <div class="vision-quote">"Every dollar you're owed should find its way back — on time, every time."</div>
+      <div class="vision-sub">Lynn handles invoicing, chases overdue payments, and keeps your cash flow visible. Every day, before you open your laptop.</div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="eyebrow">Welcome back</div>
+    <div class="title">Sign in to Lynn</div>
+    <div class="subtitle">Enter your work email and Lynn will be ready when you are.</div>
+
+    <label class="flabel" for="email">Work email</label>
+    <input class="finput" id="email" type="email" placeholder="you@company.com" />
+
+    <button id="enterLynn" class="fbtn" type="button">
+      Continue to AR workspace
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+        <path d="M3 7.5h9M8.5 3.5l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <div class="divider">
+      <div class="dline"></div>
+      <span class="dtext">Lynn handles</span>
+      <div class="dline"></div>
+    </div>
+
+    <div class="caps">
+      <div class="cap"><div class="capdot"></div>Invoice generation</div>
+      <div class="cap"><div class="capdot"></div>Payment follow-ups</div>
+      <div class="cap"><div class="capdot"></div>Overdue escalation</div>
+      <div class="cap"><div class="capdot"></div>Cash flow forecast</div>
+      <div class="cap"><div class="capdot"></div>Stripe integration</div>
+      <div class="cap"><div class="capdot"></div>Buyer risk scoring</div>
+    </div>
+
+    <div class="fnote">
+      Lynn runs her morning check-in at 09:00 every day.<br>
+      You review. You approve. She handles the rest.
+    </div>
+  </div>
+
+</div>
+<script>
+  document.getElementById("enterLynn").addEventListener("click", () => {
+    window.location.href = "/app";
+  });
+  document.getElementById("email").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") window.location.href = "/app";
+  });
+</script>
+</body>
+</html>

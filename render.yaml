@@ -14,5 +14,11 @@ services:
         value: kimi-k2.6
       - key: KIMI_BASE_URL
         value: https://api.moonshot.ai/v1
+      - key: KIMI_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: EXA_API_KEY
+        sync: false
       - key: SENDER_EMAIL
         value: finance@example.com

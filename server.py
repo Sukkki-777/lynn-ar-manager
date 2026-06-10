@@ -3222,6 +3222,8 @@ class App(BaseHTTPRequestHandler):
     def do_HEAD(self) -> None:
         path = parse.urlparse(self.path).path
         if path in {"", "/"}:
+            file_path = STATIC_DIR / "landing.html"
+        elif path == "/app":
             file_path = STATIC_DIR / "index.html"
         elif path.startswith("/static/"):
             file_path = STATIC_DIR / path.replace("/static/", "", 1)
@@ -3315,6 +3317,8 @@ class App(BaseHTTPRequestHandler):
 
     def serve_file(self, path: str) -> None:
         if path in {"", "/"}:
+            file_path = STATIC_DIR / "landing.html"
+        elif path == "/app":
             file_path = STATIC_DIR / "index.html"
         elif path.startswith("/static/"):
             file_path = STATIC_DIR / path.replace("/static/", "", 1)
@@ -3416,6 +3420,8 @@ class App(BaseHTTPRequestHandler):
         pre_due_drafts = 0
         partial_drafts = 0
         partial_exceptions = 0
+        exa_risk_updates = 0
+        exa_risk_errors = 0
         no_change = 0
         paid_count = len([i for i in state.get("invoices", []) if i.get("status") == "paid"])
         run_metrics = invoice_metrics(state.get("invoices", []))
@@ -3427,10 +3433,18 @@ class App(BaseHTTPRequestHandler):
             payment = invoice.get("payment_details") or {}
             remaining = float(payment.get("remaining_amount") or 0)
             is_partial = invoice.get("status") == "partial_paid" or remaining > 0
+            if os.environ.get("EXA_API_KEY") and days <= 7:
+                try:
+                    update_invoice_risk(invoice)
+                    exa_risk_updates += 1
+                except Exception:
+                    exa_risk_errors += 1
             if not is_partial:
-                invoice["status"] = status_for_due(due)
+                risk_score = int((invoice.get("risk_profile") or {}).get("score", 0))
+                invoice["status"] = status_for_due(due, risk_score=risk_score)
             if previous_status.get(invoice.get("invoice_number")) == invoice["status"]:
                 no_change += 1
+            detect_invoice_anomalies(state, invoice, run_metrics, source=display_source)
             if is_partial:
                 partial_exceptions += 1
                 purpose = "partial payment follow-up"
@@ -3516,18 +3530,23 @@ class App(BaseHTTPRequestHandler):
             f"{pre_due_drafts} pre-due reminder{'' if pre_due_drafts == 1 else 's'}, "
             f"{overdue_drafts} overdue escalation{'' if overdue_drafts == 1 else 's'}, "
             f"{partial_drafts} partial-payment follow-up{'' if partial_drafts == 1 else 's'}, "
+            f"{exa_risk_updates} Exa buyer-risk refresh{'' if exa_risk_updates == 1 else 'es'}, "
             "90-day cash forecast updated."
         )
         reasoning = (
             "Daily check scope: ready-to-invoice POs, pre-due reminders by payment terms "
             "(Net 30: 7 days, Net 60: 14 days, Net 90: 30 days), overdue escalation at D+1/D+7/D+30, "
-            f"Stripe payment mismatches, and 90-day cash forecast. Lynn compared status changes and payment records; {delta_text}."
+            "Stripe payment mismatches, Exa buyer-risk signals for invoices due within 7 days or already overdue, "
+            f"and 90-day cash forecast. Lynn compared status changes and payment records; {delta_text}."
         )
+        exa_error_suffix = f", {exa_risk_errors} Exa error{'' if exa_risk_errors == 1 else 's'}" if exa_risk_errors else ""
         outcome = (
             f"{ready_approvals + pre_due_drafts + overdue_drafts + partial_drafts} item"
             f"{'' if ready_approvals + pre_due_drafts + overdue_drafts + partial_drafts == 1 else 's'} placed in Waiting for your OK. "
             f"{paid_count} paid invoice{'' if paid_count == 1 else 's'} recorded; "
-            f"{partial_exceptions} partial-payment exception{'' if partial_exceptions == 1 else 's'} checked."
+            f"{partial_exceptions} partial-payment exception{'' if partial_exceptions == 1 else 's'} checked; "
+            f"{exa_risk_updates} Exa risk profile{'' if exa_risk_updates == 1 else 's'} updated"
+            f"{exa_error_suffix}."
         )
         add_activity(
             state,

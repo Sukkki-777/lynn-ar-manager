@@ -422,8 +422,9 @@ function renderBuyerRiskList() {
     const client = invoice.client_name || "Unknown";
     const risk = invoice.risk_profile || {};
     const score = Number(risk.score || (invoice.status === "high_risk" ? 82 : invoiceDaysOverdue(invoice) > 0 ? 58 : 18));
-    const current = grouped.get(client) || { client, score: 0 };
+    const current = grouped.get(client) || { client, score: 0, provider: "" };
     current.score = Math.max(current.score, score);
+    if (risk.provider === "exa") current.provider = "Exa";
     grouped.set(client, current);
   });
   const rows = [...grouped.values()].sort((a, b) => b.score - a.score).slice(0, 5);
@@ -440,6 +441,7 @@ function renderBuyerRiskList() {
         <div class="risk-row">
           <span class="risk-name">${escapeHtml(item.client)}</span>
           <div class="risk-bar-bg"><div class="risk-fill" style="width:${Math.min(100, item.score)}%;background:${fill}"></div></div>
+          ${item.provider ? `<span class="risk-source">${escapeHtml(item.provider)}</span>` : ""}
           <span class="pill ${colorClass}">${escapeHtml(level)}</span>
         </div>
       `;
